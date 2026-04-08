@@ -8,13 +8,25 @@
 </head>
 <body>
 
-    <div id="conatiner">
+<div id="conatiner">
+    <canvas id="graphbCanvas"></canvas>
+
+    <div id="ui">
         <h2> Graphing Simulation </h2>
         <div class="input-group">
             <label> ENTER EQUATION: y = f(x) </label>
-                
-        
-    </div>
-    
+            <input type="text" id="funcInput" value="sin(x) * x" placeholder="e.g. x^2">
+        </div>
+        <div class="help">
+            <strong>Supported Function:</strong><br>
+            sin, cos, tan, sqrt, abs, log, X^2...<br>
+            <br>
+            <strong>Navigation:</strong><br>
+            • Drag to Pan<br>
+            • Scroll to Zoom
+        </div>
+    </div>   
+</div>
+    <script src="script.js"></script>
 </body>
 </html> 
