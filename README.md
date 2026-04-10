@@ -1,1 +1,2 @@
 # Graphing-calculator
+this web is a graphing calculator that you it worked when the user entered the function needed to be graphed in the data entry place then he fond the function represented in graph as shown an exanple
