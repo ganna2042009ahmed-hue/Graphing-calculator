@@ -28,6 +28,7 @@ function draw() {
     ctx.fillRect(0, 0, width, height);
 
     drawGrid();
+    drawGraph();
 }
 
 window.addEventListener('resize', resize);
@@ -92,3 +93,67 @@ function parseAndEvaluate(expression, xVal) {
         return NaN;
     }
 }
+
+
+function drawGraph() {
+    const expression = input.value;
+    if (!expression) return;
+
+    ctx.beginPath();
+    ctx.lineWidth = config.lineWidth;
+    ctx.strokeStyle = config.lineColor;
+    
+    if(config.glow) {
+        ctx.shadowBlur = 15;
+        ctx.shadowColor = config.lineColor;
+    }
+
+    let drawingLine = false;
+    for (let px = 0; px < width; px++) {
+        const x = toMathX(px);
+        const y = parseAndEvaluate(expression, x);
+
+        if (Number.isFinite(y)) {
+            const py = toPixelY(y);
+            if (!drawingLine) {
+                ctx.moveTo(px, py);
+                drawingLine = true;
+            } else {
+                ctx.lineTo(px, py);
+            }
+        } else {
+            drawingLine = false;
+        }
+    }
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+}
+
+input.addEventListener('input', draw);
+
+
+let isDragging = false;
+let lastMouse = { x: 0, y: 0 };
+
+canvas.addEventListener('mousedown', e => {
+    isDragging = true;
+    lastMouse = { x: e.clientX, y: e.clientY };
+});
+
+window.addEventListener('mousemove', e => {
+    if (!isDragging) return;
+    const dx = e.clientX - lastMouse.x;
+    const dy = e.clientY - lastMouse.y;
+    camera.x -= dx / scale;
+    camera.y += dy / scale; 
+    lastMouse = { x: e.clientX, y: e.clientY };
+    draw();
+});
+
+window.addEventListener('mouseup', () => isDragging = false);
+
+
+
+
+
+
