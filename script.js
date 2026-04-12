@@ -1,157 +1,137 @@
 const canvas = document.getElementById('graphCalculator');
 const ctx = canvas.getContext('2d');
-const input = document.getElementById('funcInput');
+const funcInput = document.getElementById('funcInput');
 
-const config = {
-    gridColor: "#333333",
-    axisColor: "#ffffff",
-    textColor: "#888888",
-    lineColor: "#00d2ff",
-    lineWidth: 4,
-    glow: true
-};
 
-let width, height;
 let scale = 40; 
-let camera = { x: 0, y: 0 };
+let offsetX = 0;
+let offsetY = 0;
+let isDragging = false;
+let dragStartX, dragStartY;
+
 
 function resize() {
-    width = window.innerWidth;
-    height = window.innerHeight;
-    canvas.width = width;
-    canvas.height = height;
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    if (offsetX === 0 && offsetY === 0) {
+        offsetX = canvas.width / 2;
+        offsetY = canvas.height / 2;
+    }
     draw();
 }
 
+
+function parseEquation(eq) {
+    let parsed = eq.replace(/sin/g, 'Math.sin')
+                   .replace(/cos/g, 'Math.cos')
+                   .replace(/tan/g, 'Math.tan')
+                   .replace(/sqrt/g, 'Math.sqrt')
+                   .replace(/abs/g, 'Math.abs')
+                   .replace(/log/g, 'Math.log')
+                   .replace(/\^/g, '**'); // Convert x^2 to x**2
+    return parsed;
+}
+
+
 function draw() {
-    ctx.fillStyle = "#121212";
-    ctx.fillRect(0, 0, width, height);
-
-    drawGrid();
-    drawGraph();
-}
-
-window.addEventListener('resize', resize);
-resize()
-
-
-function toMathX(px) { return (px - width / 2) / scale + camera.x; }
-function toMathY(py) { return -(py - height / 2) / scale + camera.y; }
-function toPixelX(mx) { return (mx - camera.x) * scale + width / 2; }
-function toPixelY(my) { return -((my - camera.y) * scale) + height / 2; }
-
-
-function drawGrid() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    
+    ctx.strokeStyle = '#e2e8f0';
     ctx.lineWidth = 1;
-    ctx.font = "12px Arial";
-    ctx.textBaseline = "middle";
-    ctx.textAlign = "center";
-
-    const left = toMathX(0);
-    const right = toMathX(width);
-    const bottom = toMathY(height);
-    const top = toMathY(0);
-
-    const roughStep = 100 / scale; 
-    const magnitude = Math.pow(10, Math.floor(Math.log10(roughStep)));
-    let step = magnitude;
-    if (roughStep / magnitude > 5) step = magnitude * 10;
-    else if (roughStep / magnitude > 2) step = magnitude * 5;
-    else if (roughStep / magnitude > 1) step = magnitude * 2;
-
-    const startX = Math.floor(left / step) * step;
-    for (let x = startX; x <= right; x += step) {
-        const px = toPixelX(x);
-        const isAxis = Math.abs(x) < step / 1000;
-        ctx.strokeStyle = isAxis ? config.axisColor : config.gridColor;
-        ctx.lineWidth = isAxis ? 2 : 1;
+    
+    
+    for (let i = offsetX % scale; i < canvas.width; i += scale) {
         ctx.beginPath();
-        ctx.moveTo(px, 0);
-        ctx.lineTo(px, height);
+        ctx.moveTo(i, 0);
+        ctx.lineTo(i, canvas.height);
         ctx.stroke();
-
-        if (!isAxis) {
-            ctx.fillStyle = config.textColor;
-            ctx.fillText(Number(x.toPrecision(4)), px, toPixelY(0) + 20);
-        }
+    }
+    
+    for (let i = offsetY % scale; i < canvas.height; i += scale) {
+        ctx.beginPath();
+        ctx.moveTo(0, i);
+        ctx.lineTo(canvas.width, i);
+        ctx.stroke();
     }
 
-}
-
-function parseAndEvaluate(expression, xVal) {
-    let expr = expression.toLowerCase().replace(/\s+/g, '');
-    try {
-        const mathProps = ['sin', 'cos', 'tan', 'sqrt', 'abs', 'pow', 'log', 'PI', 'E'];
-        let jsExpr = expr.replace(/\^/g, '**');
-        mathProps.forEach(prop => {
-            const regex = new RegExp(`(?<![a-z])${prop}`, 'g');
-            jsExpr = jsExpr.replace(regex, `Math.${prop}`);
-        });
-        const f = new Function('x', `return ${jsExpr};`);
-        return f(xVal);
-    } catch (e) {
-        return NaN;
-    }
-}
-
-
-function drawGraph() {
-    const expression = input.value;
-    if (!expression) return;
+    
+    ctx.strokeStyle = '#64748b';
+    ctx.lineWidth = 2;
+    
 
     ctx.beginPath();
-    ctx.lineWidth = config.lineWidth;
-    ctx.strokeStyle = config.lineColor;
+    ctx.moveTo(0, offsetY);
+    ctx.lineTo(canvas.width, offsetY);
+    ctx.stroke();
     
-    if(config.glow) {
-        ctx.shadowBlur = 15;
-        ctx.shadowColor = config.lineColor;
-    }
+    
+    ctx.beginPath();
+    ctx.moveTo(offsetX, 0);
+    ctx.lineTo(offsetX, canvas.height);
+    ctx.stroke();
 
-    let drawingLine = false;
-    for (let px = 0; px < width; px++) {
-        const x = toMathX(px);
-        const y = parseAndEvaluate(expression, x);
 
-        if (Number.isFinite(y)) {
-            const py = toPixelY(y);
-            if (!drawingLine) {
+    const equationString = parseEquation(funcInput.value);
+    ctx.strokeStyle = '#3b82f6'; 
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+
+    let firstPoint = true;
+
+
+    for (let px = 0; px < canvas.width; px++) {
+
+        let x = (px - offsetX) / scale;
+        let y;
+
+        try {
+
+            y = eval(equationString);
+            
+
+            let py = offsetY - (y * scale);
+
+
+            if (py < -10000 || py > 10000) continue;
+
+            if (firstPoint) {
                 ctx.moveTo(px, py);
-                drawingLine = true;
+                firstPoint = false;
             } else {
                 ctx.lineTo(px, py);
             }
-        } else {
-            drawingLine = false;
+        } catch (e) {
+
+            break;
         }
     }
     ctx.stroke();
-    ctx.shadowBlur = 0;
 }
 
-input.addEventListener('input', draw);
-
-
-let isDragging = false;
-let lastMouse = { x: 0, y: 0 };
-
-canvas.addEventListener('mousedown', e => {
+canvas.addEventListener('mousedown', (e) => {
     isDragging = true;
-    lastMouse = { x: e.clientX, y: e.clientY };
+    dragStartX = e.clientX - offsetX;
+    dragStartY = e.clientY - offsetY;
+    canvas.style.cursor = 'grabbing';
 });
 
-window.addEventListener('mousemove', e => {
-    if (!isDragging) return;
-    const dx = e.clientX - lastMouse.x;
-    const dy = e.clientY - lastMouse.y;
-    camera.x -= dx / scale;
-    camera.y += dy / scale; 
-    lastMouse = { x: e.clientX, y: e.clientY };
-    draw();
+window.addEventListener('mouseup', () => {
+    isDragging = false;
+    canvas.style.cursor = 'grab';
 });
 
-window.addEventListener('mouseup', () => isDragging = false);
+window.addEventListener('mousemove', (e) => {
+    if (isDragging) {
+        offsetX = e.clientX - dragStartX;
+        offsetY = e.clientY - dragStartY;
+        draw();
+    }
+});
 
 
+funcInput.addEventListener('input', draw);
+window.addEventListener('resize', resize);
 
- 
+resize();
