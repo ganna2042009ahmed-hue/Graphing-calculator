@@ -3,27 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Graph Calcutator</title>
+    <title>Modern Graph Calculator</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+
 
 <div id="container">
     <canvas id="graphCalculator"></canvas>
     
     <div id="ui">
-        <h2>GRAPH SIMULATION</h2>
+        <h2>Graph Simulation</h2>
+        
         <div class="input-group">
-            <label>ENTER EQUATION: y = f(x)</label>
-            <input type="text" id="funcInput" value="sin(x) * x" placeholder="e.g. x^2">
+            <label for="funcInput">Enter Equation</label>
+            <div class="input-wrapper">
+                <span class="prefix">y = </span>
+                <input type="text" id="funcInput" value="sin(x) * x" placeholder="e.g. x^2">
+            </div>
         </div>
+
         <div class="help">
-            <strong>Supported Functions:</strong><br>
-            sin, cos, tan, sqrt, abs, log, x^2...<br>
-            <br>
-            <strong>Navigation:</strong><br>
-            • Drag to Pan<br>
-            
+            <div class="help-section">
+                <strong>Supported Functions</strong>
+                <p>sin, cos, tan, sqrt, abs, log, x^2...</p>
+            </div>
+            <div class="help-section">
+                <strong>Navigation</strong>
+                <ul>
+                    <li>Drag to Pan</li>
+                    <li>Scroll to Zoom (Coming soon)</li>
+                </ul>
+            </div>
         </div>
     </div>
 </div>
@@ -31,8 +45,3 @@
 <script src="script.js"></script>
 </body>
 </html>
-
-
-
-
-    
